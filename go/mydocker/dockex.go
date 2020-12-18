@@ -14,7 +14,7 @@ func main(){
 	}
 		cmd.Stdin = os.Stdin 
 		cmd.Stdout= os.Stdout 
-		cmd.Stderr = os . Stde
+		cmd.Stderr = os.Stderr
 
 	if err := cmd.Run();err != nil{
 		log.Fatal(err)
