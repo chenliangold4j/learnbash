@@ -1,4 +1,4 @@
-package mydocker
+package main
 
 import(
 	"os/exec"
