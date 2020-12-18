@@ -13,14 +13,14 @@ func main(){
 		Cloneflags: syscall.CLONE_NEWUTS | syscall.CLONE_NEWIPC | syscall.CLONE_NEWPID | syscall.CLONE_NEWNS | syscall.CLONE_NEWUSER,
 		UidMappings: []syscall.SysProcIDMap{
 			{
-				ContainerID: 0,
+				ContainerID: 5001,
 				HostID:      0,
 				Size:        1,
 			},
 		},
 		GidMappings: []syscall.SysProcIDMap{
 			{
-				ContainerID: 0,
+				ContainerID: 5001,
 				HostID:      0,
 				Size:        1,
 			},
