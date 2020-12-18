@@ -1,0 +1,9 @@
+{
+    "graph":"/var/lib/docker",
+    "storage-driver":"overlay2",
+    "insecure-registries": ["registry.access.redhat.com","quay.io","harbor.phantom5702.com"],
+    "registry-mirrors":["https://tuj12vuh.mirror.aliyuncs.com"],
+    "bip": "172.7.#{自己的ip最后尾数}.1/24",
+    "exec-opts": ["native.cgroupdriver=systemd"],
+    "live-restore":true
+}
