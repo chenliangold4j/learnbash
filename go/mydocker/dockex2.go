@@ -25,8 +25,9 @@ func main(){
 				Size:        1,
 			},
 		},
-	} 
-		cmd.SysProcAttr.Credential = &syscall.Credential{Uid:uint32(1),Gid:uint32(1)}
+	}  
+	// 在我的版本  go1.15.6 不能有这行，，1.7 可以
+		// cmd.SysProcAttr.Credential = &syscall.Credential{Uid:uint32(1),Gid:uint32(1)}
 		cmd.Stdin = os.Stdin 
 		cmd.Stdout= os.Stdout 
 		cmd.Stderr = os . Stderr
