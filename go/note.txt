@@ -1,0 +1,19 @@
+dokcer 是一个使用了namespace 和 cgroups的工具。
+
+1. namepsce是kernel的一个功能，他可以隔离一系列的系统资源。
+    linux有6中namespace 
+        mount namespace     CLONE_NEWNS     隔离挂载点
+        UTS namespce        CLONE_NEWUTS    隔离nodename  domainname两个系统标识
+        IPC namespace       CLONE_NEWIPC    隔离System V IPC 和 POSIX message queues
+        PID namespace       CLONE_NEWPID    隔离进程ID
+        newwork namespace   CLONE_NEWNET    隔离网络以及设备
+        User namespace      CLONE_NEWUSER   隔离用户以及用户组
+
+        namespace api 主要使用了3个系统调用   clone() 插件新进程。   unshare() 将进程移除namespace  setns() 将进程移入namesapce
+
+2. cgroups 提供了对一组进程以及将来子进程的资源限制
+     cgroups的3个组件
+        1. cgroup 
+        2. subsystem
+        3. hierarchy
+        
