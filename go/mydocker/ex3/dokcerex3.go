@@ -19,7 +19,7 @@ func main(){
 		fmt.Printf("current pid %d",syscall.Getpid())
 		fmt.Printf("unormal")
 		fmt.Println()
-		cmd := exec.Command("sh","-c",`stress --vm-bytes 200m --vm-keep -m 1`)
+		cmd := exec.Command("sh","-c",`nohup stress --vm-bytes 200m --vm-keep -m 1 &`)
 		cmd.SysProcAttr= &syscall.SysProcAttr{}
 		cmd.Stdin = os.Stdin
 		cmd.Stdout = os.Stdout
