@@ -10,10 +10,123 @@ dokcer 是一个使用了namespace 和 cgroups的工具。
         User namespace      CLONE_NEWUSER   隔离用户以及用户组
 
         namespace api 主要使用了3个系统调用   clone() 插件新进程。   unshare() 将进程移除namespace  setns() 将进程移入namesapce
+        示例见 ex1 ex2
 
 2. cgroups 提供了对一组进程以及将来子进程的资源限制
      cgroups的3个组件
         1. cgroup 
+            进程分组管理的一种机制，一个cgroup包含一组进程，可以在这个cgroup上增加liunx subsystem 的各种参数配置
         2. subsystem
+            资源控制的模块，包含 各种设备cpu内存的设置
+            查看内核支持的subsystem设置，可以安装 cgroup-bin ，然后用命令 lssbusys -a 
         3. hierarchy
-        
+            把一组cgroup串成一个树状结构。通过这种结构，cgroup 可以做到继承
+
+    三个组件的相互关系
+        1.系统创建cgroup 之后，系统所有的进程都会加入这个hierarchy的cgroup根节点，这个cgroup根节点是hierarchy默认创建的
+        2.一个subsystem只能附加到一个hierarchy上面
+        3.一个hierarchy可以附加多个subsystem
+        4.一个进程可以作为多个cgroup的成员，但是这些cgroup必须在不同的hierarchy中
+        5.一个进程fork出子进程时，子进程是和父进程在同一个cgroup中的，也可以根据需要移动到其他cgroup中
+
+    验证:
+      1.mkdir cgroup-test
+        sudo mount -t cgroup -o none,name=cgroup-test cgroup-test ./cgroup-test
+        这里-t指定类型， -o none 代表没有硬件是一个虚拟文件系统
+        ls ./cgroup-test/
+        cgroup.clone_children  cgroup.sane_behavior  release_agent
+        cgroup.procs           notify_on_release     tasks
+            这时候会生成一些默认文件
+            cgroup.clone_children  cpuset的subsystem 会读取这个配置文件，如果这个值是1（默认0），子cgroup才会继承
+            父cgroup的cpuset的配置
+            cgroup.procs 是树中当前节点cgroup中的进程组id ,创建时位置是在根节点，这个文件中会有所有进程组id
+            taks标识该cgroup下面的进程id，把进程id写入taks，便将次进程加入cgroup中
+
+      2.liang@liang-CN95L001:~/cgroup-test$ sudo mkdir cgroup-1
+        liang@liang-CN95L001:~/cgroup-test$ sudo mkdir cgroup-2
+
+        创建两个子cgroup
+        :~/cgroup-test$ tree 
+        .
+        ├── cgroup-1
+        │   ├── cgroup.clone_children
+        │   ├── cgroup.procs
+        │   ├── notify_on_release
+        │   └── tasks
+        ├── cgroup-2
+        │   ├── cgroup.clone_children
+        │   ├── cgroup.procs
+        │   ├── notify_on_release
+        │   └── tasks
+        ├── cgroup.clone_children
+        ├── cgroup.procs
+        ├── cgroup.sane_behavior
+        ├── notify_on_release
+        ├── release_agent
+        └── tasks
+
+        这里能看到自动添加了cgroup-1 2 下的默认文件
+        kernel会把创建的文件夹标记未cgroup的子cgroup ，他们会继承父的属性
+
+      3. /cgroup-test/cgroup-1$ sudo sh -c "echo $$ >> tasks"
+
+         cat /proc/1450220/cgroup
+            13:name=cgroup-test:/cgroup-1
+            12:devices:/user.slice
+            11:perf_event:/
+            10:memory:/user.slice/user-1000.slice/session-790.scope
+            9:blkio:/user.slice
+            8:hugetlb:/
+            7:cpu,cpuacct:/user.slice
+            6:freezer:/
+            5:net_cls,net_prio:/
+            4:cpuset:/
+            3:rdma:/
+            2:pids:/user.slice/user-1000.slice/session-790.scope
+            1:name=systemd:/user.slice/user-1000.slice/session-790.scope        
+            0::/user.slice/user-1000.slice/session-790.scope
+
+        将进程移动到其他cgroup中，只需要将进程id写入tasks中
+      4.通过subsystem限制cgroup中进程的资源
+            /cgroup-test/cgroup-1$ mount | grep memory
+            cgroup on /sys/fs/cgroup/memory type cgroup (rw,nosuid,nodev,noexec,relatime,memory)        
+
+            系统默认已经为每个subsystem创建了一个默认的hierarchy，比如memory的hierarachy
+            可以看到，/sys/fs/cgroup/memory 目录便是挂在了memory subsystem 的 hierarchy上。
+            下面通过这个hieararchy中创建cgroup 限制如下进程占用的内存。
+
+            stress --vm-bytes 200m --vm-keep -m 1  //stress 
+            stress 命令主要用来模拟系统负载较高时的场景
+
+            /sys/fs/cgroup/memory$ sudo mkdir test-limit-memory && cd test-limit-memory
+            设置最大cgroup的最大内存占用为100mb
+            /sys/fs/cgroup/memory/test-limit-memory$ sudo sh -c "echo "100m" > memory.limit_in_bytes"
+            将当前进程移动到这个cgroup 中
+            sudo sh -c "echo $$>tasks "
+            /sys/fs/cgroup/memory/test-limit-memory$ stress --vm-bytes 200m --vm-keep -m 1
+            stress: info: [1465649] dispatching hogs: 0 cpu, 0 io, 1 vm, 0 hdd
+            stress: FAIL: [1465649] (415) <-- worker 1465654 got signal 9
+            stress: WARN: [1465649] (417) now reaping child worker processes
+            stress: FAIL: [1465649] (451) failed run completed in 0s
+            再次运行 我这里是无法运行 限制到90m才可以正常运行
+
+3. docker
+    docker 是如何使用cgroups的
+    docker是通过cgroup实现容器资源限制和监控的，下面以一个实际的容器实例来看一下docker是如何配置cgroup的
+
+    sudo docker run -itd -m 128m ubuntu
+    查看内存限制
+    cd /sys/fs/cgroup/memory/docker/3441b00d479f20443278571bde98635b5d5d0ced513653ad534966ca5457daf3/
+    cat memory.limit_in_bytes 
+    134217728
+    查看cgroup中使用的内存大小
+    cat memory.usage_in_bytes 
+    1880064
+
+    这里能看到docker为每个容器创建了cgroup，并通过cgroup去配置资源限制和资源监控
+
+
+
+4.用go语言实现cgroup 限制容器资源
+    ex3
+    
