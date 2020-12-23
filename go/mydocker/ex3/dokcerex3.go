@@ -59,6 +59,7 @@ func main(){
 		os.Exit(1)
 	}else{
 		fmt.Printf("%v",cmd.Process.Pid)
+		fmt.Printf("process")
 		//在系统默认创建挂载了memory subsystem 的hierarchy 上创建cgroup
 		os.Mkdir(path.Join(cgroupMemoryHierarchMount,"testmemorylimit"),0755)
 		//将容器进程加入这个cgroup
