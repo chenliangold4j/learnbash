@@ -1,0 +1,23 @@
+构造容器
+
+1.基本知识介绍
+    1.linux proc 文件系统
+        linux 下的/proc 文件系统是由内核提供的。它其实不是一个真正的文件系统，只包含了系统运行时的信息。它只存在与内存中，而不是占用外存空间。
+        lsmod 其实就是 cat /proc/modules;
+
+        下面是几个比较重要的部分
+         /proc/N            pis为N的进程信息
+         /proc/N/cmdline    进程启动命令
+         /proc/N/cwd        链接到进程当前工作目录
+         /proc/N/environ    进程环境变量列表
+         /proc/N/exe        链接到进程的执行命令文件
+         /proc/N/fd         包含进程相关的所有文件描述符
+         /proc/N/maps       与进程相关的内存映射信息
+         /proc/N/mem        指代进程持有的内存，不可读
+         /proc/N/root       链接到进程的根目录
+         /proc/N/stat       进程状态
+         /proc/N/statm      进程内存使用状态
+         /proc/N/status     进程状态信息，比stat/statm更具可读性
+         /proc/self/        链接到当前正在运行的进程
+
+         

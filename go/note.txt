@@ -132,4 +132,63 @@ dokcer 是一个使用了namespace 和 cgroups的工具。
    这个例子并不能正常限制，无法进入最后的else块
    但是例子里面确实做到了memory的限制，这里暂时不做追究
 
-5.
+5.docker 的存储驱动
+    AUFS 时docker 选用的第一种存储驱动。
+    1.每一个docker image 都是一系列的read-only layer组成，image layer的内容都存储在 docker host filesystem 的 /var/lib/docker/aufs/diff 目录下
+    而，/var/lib/docker/aufs/layers 目录，则存储着image layer 如何堆栈这些layer的metadata
+
+    2.当前系统和docker看到的时overlay2 和 aufs有区别
+        但是也能看到文件系统里面确实分层 有关overlay2 的资料详情可以搜索
+
+    3.自己动手写AUFS
+        /aufs$ ls
+        container-layer  images-layer2  images-layer4  mnt
+        images-layer1    images-layer3  images-layer5
+    
+        挂载到mnt下作为aufs 虚拟设备
+        sudo mount -t aufs -o dirs=./container-layer:./images-layer1:./images-layer2:./images-layer3:./images-layer4:./images-layer5 none ./mnt
+
+        tree mnt/
+        mnt/
+        ├── container-layer.txt
+        ├── images-layer1.txt
+        ├── images-layer2.txt
+        ├── images-layer3.txt
+        ├── images-layer4.txt
+        └── images-layer5.txt
+
+        cat si_930e00bee7025105/*
+        /home/liang/aufs/container-layer=rw
+        /home/liang/aufs/images-layer1=ro
+        /home/liang/aufs/images-layer2=ro
+        /home/liang/aufs/images-layer3=ro
+        /home/liang/aufs/images-layer4=ro
+        /home/liang/aufs/images-layer5=ro
+        64
+        65
+        66
+        67
+        68
+        69
+        /home/liang/aufs/container-layer/.aufs.xino
+        之后又cantainer-layer 是读写权限，其他全是只读
+
+        /aufs$ echo -e "\n write to mnt's layer1.txt" >> ./mnt/images-layer5.txt
+        写入一句话到layer5的末尾
+
+        $ cat mnt/images-layer5.txt 
+        images5
+
+        write to mnt's layer1.txt
+
+        /aufs$ cat images-layer5/images-layer5.txt 
+        images5
+        真实的文件并未更改
+        /aufs$ ls container-layer/
+        container-layer.txt  images-layer5.txt
+        container-layer 下多了一个文件有这个文件的内容
+
+        也就是说，修改mnt/images-layer5.txt文件时，系统像拷贝一份到read-write层的container-layer目录中，接着再写入到拷贝后的文件中。
+        
+
+
