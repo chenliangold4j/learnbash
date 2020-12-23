@@ -1,0 +1,23 @@
+sudo go 找不到命令
+我们使用 sudo 时，使用的配置文件是 /etc/sudoers。
+
+解决
+配置 /etc/sudoers 文件中的 Defaults secure_path 这一项。将 $GOROOT/bin 目录加入进去。（请使用绝对目录，如：/home/go/bin/）
+
+Defaults secure_path 这一行，在文件中是这样子的：
+
+Defaults secure_path = /home/go/bin:/sbin:/bin:/usr/sbin:/usr/bin
+其他问题
+当我们使用了自己 GOPATH 中的包时，sudo go run xxxx 并不会在我们环境变量指定的目录去查找包。
+
+我们需要设置 /etc/sudoers 文件中的 Defaults env_keep 项。向其中加入我们的 GOPATH 环境变量。
+
+Defaults env_keep 这几行，在文件中是这样的：
+
+Defaults env_keep = “COLORS DISPLAY HOSTNAME HISTSIZE KDEDIR LS_COLORS”
+Defaults env_keep += “MAIL PS1 PS2 QTDIR USERNAME LANG LC_ADDRESS LC_CTYPE”
+Defaults env_keep += “LC_COLLATE LC_IDENTIFICATION LC_MEASUREMENT LC_MESSAGES”
+Defaults env_keep += “LC_MONETARY LC_NAME LC_NUMERIC LC_PAPER LC_TELEPHONE”
+Defaults env_keep += “LC_TIME LC_ALL LANGUAGE LINGUAS _XKB_CHARSET XAUTHORITY”
+Defaults env_keep += “GOPATH”
+加上最后的那一行就行。
