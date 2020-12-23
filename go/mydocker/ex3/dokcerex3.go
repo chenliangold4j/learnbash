@@ -17,6 +17,7 @@ func main(){
 	if os.Args[0] == "/proc/self/exe" {
 		//容器进程
 		fmt.Printf("current pid %d",syscall.Getpid())
+		fmt.Printf("unormal")
 		fmt.Println()
 		cmd := exec.Command("sh","-c",`stress --vm-bytes 200m --vm-keep -m 1`)
 		cmd.SysProcAttr= &syscall.SysProcAttr{}
