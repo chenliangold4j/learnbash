@@ -1,0 +1,3 @@
+首先 go mode init [projectName]
+之后建立user package
+然后test.go引用，即可引用模块
