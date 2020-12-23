@@ -129,4 +129,7 @@ dokcer 是一个使用了namespace 和 cgroups的工具。
 
 4.用go语言实现cgroup 限制容器资源
     ex3
-    
+   这个例子并不能正常限制，无法进入最后的else块
+   但是例子里面确实做到了memory的限制，这里暂时不做追究
+
+5.

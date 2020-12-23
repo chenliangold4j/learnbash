@@ -1,6 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"os"
+)
 
 func sum(s []int, c chan int) {
 	sum := 0
@@ -11,12 +14,12 @@ func sum(s []int, c chan int) {
 }
 
 func main() {
-	s := []int{7, 2, 8, -9, 4, 0}
 
-	c := make(chan int)
-	go sum(s[:len(s)/2], c)
-	go sum(s[len(s)/2:], c)
-	x, y := <-c, <-c // 从 c 中接收
+	fmt.Println(os.Args[0])
+	if os.Args[0] == "test"{
+		fmt.Println("test")
+	}else{
+		fmt.Println("kkk")
+	}
 
-	fmt.Println(x, y, x+y)
 }
