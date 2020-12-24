@@ -20,4 +20,70 @@
          /proc/N/status     进程状态信息，比stat/statm更具可读性
          /proc/self/        链接到当前正在运行的进程
 
+    2.详情见代码  fork出来的mydokcer        
+
+
+
+
+    3.linux 虚拟网络设备
+        常见的虚拟化设备有veth,bridge,201.1q VLAN device, TAP,
+        这里主要要用到veth 和 bridge
+
+        veth是成对出现的虚拟网络设备，发送veth一端虚拟设备的请求会从另一端的虚拟设备中发出，再容器的虚拟化场景中，经常会
+        使用veth连接不同的网络namespace，如下
+
+        # 创建两个网络
+        ~$ sudo ip netns add ns1
+        ~$ sudo ip netns add ns2
+        # 创建一对veth
+        sudo ip link add veth0 type veth peer name veth1 
+        # 分别将两个veth移动到两个namespace中
+        sudo ip link set veth0 netns ns1
+        sudo ip link set veth1 netns ns2
+        去ns1的namespace 中查看网络设备
+        sudo ip netns exec ns1 ip link
+
+        1: lo: <LOOPBACK> mtu 65536 qdisc noop state DOWN mode DEFAULT group default qlen 1000
+            link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+        8: veth0@if7: <BROADCAST,MULTICAST> mtu 1500 qdisc noop state DOWN mode DEFAULT group default qlen 1000
+            link/ether 52:19:73:b1:fe:cf brd ff:ff:ff:ff:ff:ff link-netns ns2
+
+
+
+        #配置每个veth的网络地址和namespace 的路由
+        sudo ip netns exec ns1 ifconfig veth0 172.18.0.2/24 up
+        sudo ip netns exec ns2 ifconfig veth1 172.18.0.3/24 up
+        sudo ip netns exec ns1 route add default dev veth0
+        sudo ip netns exec ns2 route add default dev veth1
+
+        #通过veth 一端出去的包，另外一端能够直接接收到
+        sudo ip netns exec ns1 ping -c 1 172.18.0.3
+        PING 172.18.0.3 (172.18.0.3) 56(84) bytes of data.
+        64 bytes from 172.18.0.3: icmp_seq=1 ttl=64 time=0.087 ms
+
+        --- 172.18.0.3 ping statistics ---
+        1 packets transmitted, 1 received, 0% packet loss, time 0ms
+        rtt min/avg/max/mdev = 0.087/0.087/0.087/0.000 ms
+
+
+        //特别的：
+        https://blog.csdn.net/guotianqing/article/details/82356096
+
+
+        linux bridge
+            sudo ip  netns add ns1 
+            sudo ip  link add veth0 type veth peer name veth1
+            sudo ip  link veth 1 setns ns1
+
+            创建网桥 ：这里要安装
+            sudo brctl addbr br0
+
+            挂载网络设备
+            sudo brctl addif br0 eth0
+            sudo brctl addif br0 veth0
+            
+        
+        linux 路由表
+            linux 网络层很多东西，，都不懂。好气
+
         
